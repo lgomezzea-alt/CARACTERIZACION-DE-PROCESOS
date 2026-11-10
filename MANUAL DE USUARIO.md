@@ -342,3 +342,29 @@ Junto al botón **«Guardar Avances»** en la barra superior (Nivel 1) y dentro 
    - Para reanudar el trabajo en cualquier momento, basta con hacer clic en el botón **«Importar»** en la barra superior y seleccionar el archivo `.pdf` generado.
    - La plataforma extraerá automáticamente toda la información del proceso, restaurará el estado y te permitirá continuar la caracterización hasta finalizar la ficha oficial.
 
+---
+
+## 👥 10. INGRESO DE EQUIPOS DE TRABAJO Y VALIDACIÓN CON CLAVE DE ACCESO
+
+La plataforma incorpora un módulo de **Validación y Acceso para Equipos de Trabajo**, ubicado en la barra superior (Nivel 1) y en el pie de página, permitiendo a cada grupo de la organización autenticarse con su propia clave y trabajar colaborativamente.
+
+### 🔑 ¿Cómo Funciona el Ingreso de Equipos?
+1. **Creación del Equipo y Generación de la Clave:**
+   - Haz clic en el botón **«Ingreso Equipo»** en la barra superior.
+   - Selecciona la pestaña **«Generar Nuevo Equipo & Clave»**.
+   - Ingresa el nombre del equipo (ej. *Comité de Calidad y SIG*, *Equipo Misional de Producción*), el líder y el área correspondiente.
+   - Escribe una clave personalizada o presiona el botón **«Generar Clave Aleatoria»** para obtener un código seguro de acceso.
+   - Puedes ingresar los nombres de los integrantes que conformarán el grupo de trabajo.
+   - Haz clic en **«Guardar y Validar Equipo»**.
+
+2. **Validación de Ingreso para Trabajar como Grupo:**
+   - Cada vez que los integrantes del equipo ingresen a la plataforma, abrirán la ventana **«Ingreso Equipo»**.
+   - En la pestaña **«Validar Ingreso con Clave»**, seleccionan su equipo de trabajo e introducen la clave de acceso asignada.
+   - Seleccionan o escriben el nombre del integrante que está trabajando en la sesión actual.
+   - Al pulsar **«Validar e Ingresar como Grupo»**, la sesión queda autenticada con distintivo verde de grupo verificado.
+
+3. **Gestión del Equipo y Respaldo:**
+   - La clave de acceso se puede consultar o copiar al portapapeles en 1 clic para compartirla con los demás miembros del equipo.
+   - Se pueden registrar nuevos integrantes en cualquier momento.
+   - Toda la información de equipos y sesiones activas queda sincronizada en el almacenamiento local y se incluye en las descargas de respaldo JSON.
+

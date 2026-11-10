@@ -1,10 +1,91 @@
-import { OrgContext, ProcessCharacterization, JobPosition } from '../types/process';
+import { OrgContext, ProcessCharacterization, JobPosition, WorkGroup, WorkGroupSession } from '../types/process';
 import { DEFAULT_ORG_CONTEXT, PROCESS_TEMPLATES, DEFAULT_JOB_POSITIONS } from '../data/templates';
 
 const ORG_STORAGE_KEY = 'gp_org_context_v1';
 const PROCESSES_STORAGE_KEY = 'gp_processes_list_v1';
 const ACTIVE_PROCESS_ID_KEY = 'gp_active_process_id_v1';
 const JOB_POSITIONS_STORAGE_KEY = 'gp_job_positions_v1';
+const WORKGROUPS_STORAGE_KEY = 'gp_workgroups_list_v1';
+const ACTIVE_SESSION_STORAGE_KEY = 'gp_active_team_session_v1';
+
+export const DEFAULT_INITIAL_GROUPS: WorkGroup[] = [
+  {
+    id: 'grp-calidad-01',
+    name: 'Equipo de Calidad y SIG',
+    accessKey: 'CALIDAD2026',
+    leaderName: 'Coordinador de Calidad',
+    department: 'Gestión Integral y Calidad',
+    description: 'Equipo responsable de la estandarización y auditoría de procesos ISO 9001',
+    createdAt: new Date().toISOString().split('T')[0],
+    lastAccessAt: new Date().toISOString(),
+    members: [
+      { id: 'm1', name: 'Líder del Proceso', role: 'Líder / Responsable' },
+      { id: 'm2', name: 'Auditor Interno SIG', role: 'Auditor / Verificador' },
+      { id: 'm3', name: 'Analista de Procesos', role: 'Documentador Operativo' }
+    ]
+  },
+  {
+    id: 'grp-operaciones-02',
+    name: 'Comité Operativo y Misional',
+    accessKey: 'EQUIPO9001',
+    leaderName: 'Jefe de Operaciones',
+    department: 'Operaciones y Producción',
+    description: 'Equipo de diseño y caracterización de procesos misionales y de apoyo',
+    createdAt: new Date().toISOString().split('T')[0],
+    lastAccessAt: new Date().toISOString(),
+    members: [
+      { id: 'm4', name: 'Jefe de Operaciones', role: 'Líder Operativo' },
+      { id: 'm5', name: 'Supervisor de Área', role: 'Facilitador PHVA' }
+    ]
+  }
+];
+
+export function getStoredWorkGroups(): WorkGroup[] {
+  try {
+    const raw = localStorage.getItem(WORKGROUPS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error('Error loading workgroups from storage', e);
+  }
+  return DEFAULT_INITIAL_GROUPS;
+}
+
+export function saveStoredWorkGroups(groups: WorkGroup[]): void {
+  try {
+    localStorage.setItem(WORKGROUPS_STORAGE_KEY, JSON.stringify(groups));
+  } catch (e) {
+    console.error('Error saving workgroups to storage', e);
+  }
+}
+
+export function getStoredActiveSession(): WorkGroupSession | null {
+  try {
+    const raw = localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.error('Error loading active team session', e);
+  }
+  return null;
+}
+
+export function saveStoredActiveSession(session: WorkGroupSession | null): void {
+  try {
+    if (session) {
+      localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, JSON.stringify(session));
+    } else {
+      localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+    }
+  } catch (e) {
+    console.error('Error saving active team session', e);
+  }
+}
 
 export function getStoredJobPositions(): JobPosition[] {
   try {
@@ -155,13 +236,17 @@ export interface FullWorkspaceBackup {
   processes: ProcessCharacterization[];
   jobPositions: JobPosition[];
   activeProcessId: string;
+  workGroups?: WorkGroup[];
+  activeSession?: WorkGroupSession | null;
 }
 
 export function buildLocalBackupData(
   orgContext: OrgContext,
   processes: ProcessCharacterization[],
   jobPositions: JobPosition[],
-  activeProcessId: string
+  activeProcessId: string,
+  workGroups?: WorkGroup[],
+  activeSession?: WorkGroupSession | null
 ): FullWorkspaceBackup {
   const isMobile = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
   return {
@@ -173,7 +258,9 @@ export function buildLocalBackupData(
     organization: orgContext,
     processes,
     jobPositions,
-    activeProcessId
+    activeProcessId,
+    workGroups: workGroups || getStoredWorkGroups(),
+    activeSession: activeSession !== undefined ? activeSession : getStoredActiveSession()
   };
 }
 

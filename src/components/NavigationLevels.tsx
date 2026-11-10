@@ -32,9 +32,11 @@ import {
   HardDrive,
   Smartphone,
   Laptop,
-  FileDown
+  FileDown,
+  Users,
+  KeyRound
 } from 'lucide-react';
-import { OrgContext, ProcessCharacterization, ProcessCategory, DemingStage } from '../types/process';
+import { OrgContext, ProcessCharacterization, ProcessCategory, DemingStage, WorkGroupSession } from '../types/process';
 
 export interface NavigationLevelsProps {
   // Nivel 1 Props
@@ -53,11 +55,11 @@ export interface NavigationLevelsProps {
   onPrintPreview?: () => void;
   onSaveProgress?: () => void;
   onRequestExit?: () => void;
-  onOpenSaveLocalModal?: () => void;
-  onDownloadLocalBackup?: () => void;
   onOpenInstallModal?: () => void;
   onGenerateProgressPDF?: () => void;
   isGeneratingPDF?: boolean;
+  activeSession?: WorkGroupSession | null;
+  onOpenTeamAuthModal?: () => void;
   hasUnsavedChanges?: boolean;
   lastSavedTime?: string | null;
   isSaving?: boolean;
@@ -70,13 +72,7 @@ export interface NavigationLevelsProps {
   isDemingComplete: boolean;
 
   // Nivel 3 Props (Contextual helpers according to active step)
-  onStep4AddActivity?: () => void;
   onStep4QuickStage?: (stage: DemingStage) => void;
-  onStep5AddControl?: () => void;
-  onStep5AddIndicator?: () => void;
-  onStep5GenerateControls?: () => void;
-  onStep2AddNorms?: () => void;
-  onStep1SuggestObjective?: (type: string) => void;
   onStep6ToggleSignatures?: () => void;
   isSignaturesDrawerOpen?: boolean;
   onStep6ExportJSON?: () => void;
@@ -103,11 +99,11 @@ export const NavigationLevels: React.FC<NavigationLevelsProps> = ({
   onPrintPreview,
   onSaveProgress,
   onRequestExit,
-  onOpenSaveLocalModal,
-  onDownloadLocalBackup,
   onOpenInstallModal,
   onGenerateProgressPDF,
   isGeneratingPDF = false,
+  activeSession = null,
+  onOpenTeamAuthModal,
   hasUnsavedChanges = false,
   lastSavedTime,
   isSaving = false,
@@ -116,13 +112,7 @@ export const NavigationLevels: React.FC<NavigationLevelsProps> = ({
   totalSteps,
   demingCounts,
   isDemingComplete,
-  onStep4AddActivity,
   onStep4QuickStage,
-  onStep5AddControl,
-  onStep5AddIndicator,
-  onStep5GenerateControls,
-  onStep2AddNorms,
-  onStep1SuggestObjective,
   onStep6ToggleSignatures,
   isSignaturesDrawerOpen = false,
   onStep6ExportJSON,
@@ -185,6 +175,34 @@ export const NavigationLevels: React.FC<NavigationLevelsProps> = ({
 
             {/* Botones de Nivel 1: Manual de Funciones, Mapa, Asistente */}
             <div className="flex items-center gap-1.5">
+              {/* Botón de Acceso y Validación de Equipo de Trabajo */}
+              {onOpenTeamAuthModal && (
+                <button
+                  type="button"
+                  onClick={onOpenTeamAuthModal}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition shadow-2xs ${
+                    activeSession
+                      ? 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 hover:text-white border-emerald-600/70 ring-1 ring-emerald-500/30'
+                      : 'bg-orange-950/70 hover:bg-orange-900 text-orange-300 hover:text-white border-orange-600/60'
+                  }`}
+                  title={
+                    activeSession
+                      ? `Equipo Validado: ${activeSession.groupName} (${activeSession.authenticatedMemberName}) - Click para gestionar equipo o cambiar clave`
+                      : 'Ingreso de Equipos: Genera o valida tu clave de acceso para trabajar como grupo'
+                  }
+                >
+                  <Users className={`w-3.5 h-3.5 ${activeSession ? 'text-emerald-400' : 'text-orange-400'}`} />
+                  <span className="max-w-[130px] truncate">
+                    {activeSession ? activeSession.groupName : 'Ingreso Equipo'}
+                  </span>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
+                    activeSession ? 'bg-emerald-800 text-emerald-200' : 'bg-orange-800 text-orange-200'
+                  }`}>
+                    {activeSession ? '✓' : 'Clave'}
+                  </span>
+                </button>
+              )}
+
               <button
                 onClick={onOpenJobManual}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
@@ -449,60 +467,46 @@ export const NavigationLevels: React.FC<NavigationLevelsProps> = ({
             {currentStep === 1 && onStep1SuggestObjective && (
               <div className="flex items-center gap-1.5 text-xs">
                 <span className="text-slate-400 text-[11px] font-semibold hidden md:inline">Sugerir objetivo:</span>
-                <button
-                  type="button"
-                  onClick={() => onStep1SuggestObjective('calidad')}
-                  className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-semibold transition"
-                >
-                  + Calidad
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onStep1SuggestObjective('eficiencia')}
-                  className="px-2 py-1 bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded-lg text-[11px] font-semibold transition"
-                >
-                  + Productividad
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onStep1SuggestObjective('servicio')}
-                  className="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-[11px] font-semibold transition"
-                >
-                  + Servicio
-                </button>
+            {/* Si está en Paso 1: Información de Contexto */}
+            {currentStep === 1 && (
+              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold text-[11px]">
+                  Categoría: {activeProcess.category || 'Misional'}
+                </span>
+                <span className="hidden md:inline text-[11px] text-slate-500">
+                  Líder: <strong className="text-slate-700">{activeProcess.leaderRole || 'Por definir'}</strong>
+                </span>
               </div>
             )}
 
-            {/* Si está en Paso 2: Normas estándar */}
-            {currentStep === 2 && onStep2AddNorms && (
-              <div className="flex items-center gap-1.5 text-xs">
-                <button
-                  type="button"
-                  onClick={onStep2AddNorms}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded-lg text-[11px] font-semibold transition"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Sugerir Normas ISO y SST</span>
-                </button>
+            {/* Si está en Paso 2: Normas y Recursos */}
+            {currentStep === 2 && (
+              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <span className="px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200 font-semibold text-[11px]">
+                  {activeProcess.legalAndTechnicalNorms?.length || 0} normas registradas
+                </span>
+                <span className="hidden md:inline text-[11px] text-slate-500">
+                  {activeProcess.humanResources?.length || 0} competencias y cargos
+                </span>
               </div>
             )}
 
-            {/* Si está en Paso 3: Flujograma (Vistas y Zoom) */}
+            {/* Si está en Paso 3: Flujograma (Vistas y Zoom centralizados) */}
             {currentStep === 3 && onToggleFlowchartView && onZoomChange && (
               <div className="flex items-center gap-1.5 text-xs">
                 <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                   <button
                     onClick={() => onToggleFlowchartView('swimlanes')}
-                    className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
-                      flowchartView === 'swimlanes' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500'
+                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold transition ${
+                      flowchartView === 'swimlanes' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
                     Carriles PHVA
                   </button>
                   <button
                     onClick={() => onToggleFlowchartView('sequential')}
-                    className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
-                      flowchartView === 'sequential' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500'
+                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold transition ${
+                      flowchartView === 'sequential' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
                     Secuencia
@@ -510,15 +514,18 @@ export const NavigationLevels: React.FC<NavigationLevelsProps> = ({
                 </div>
 
                 <button
-                  onClick={() => onZoomChange(Math.max(0.7, zoomLevel - 0.1))}
-                  className="p-1 border border-slate-200 rounded-md hover:bg-slate-50 text-slate-600"
+                  onClick={() => onZoomChange(Math.max(0.7, Number((zoomLevel - 0.1).toFixed(1))))}
+                  className="p-1 border border-slate-200 rounded-md hover:bg-slate-50 text-slate-600 transition"
                   title="Reducir zoom"
                 >
                   <ZoomOut className="w-3.5 h-3.5" />
                 </button>
+                <span className="font-mono text-slate-500 text-[11px] w-9 text-center hidden sm:inline">
+                  {Math.round(zoomLevel * 100)}%
+                </span>
                 <button
-                  onClick={() => onZoomChange(Math.min(1.4, zoomLevel + 0.1))}
-                  className="p-1 border border-slate-200 rounded-md hover:bg-slate-50 text-slate-600"
+                  onClick={() => onZoomChange(Math.min(1.4, Number((zoomLevel + 0.1).toFixed(1))))}
+                  className="p-1 border border-slate-200 rounded-md hover:bg-slate-50 text-slate-600 transition"
                   title="Aumentar zoom"
                 >
                   <ZoomIn className="w-3.5 h-3.5" />
@@ -526,94 +533,54 @@ export const NavigationLevels: React.FC<NavigationLevelsProps> = ({
               </div>
             )}
 
-            {/* Si está en Paso 4: Mapeo PHVA (Nueva actividad y accesos rápidos PHVA) */}
-            {currentStep === 4 && (
+            {/* Si está en Paso 4: Mapeo PHVA (Accesos rápidos PHVA) */}
+            {currentStep === 4 && onStep4QuickStage && (
               <div className="flex items-center gap-1.5 text-xs">
-                {onStep4AddActivity && (
-                  <button
-                    type="button"
-                    onClick={onStep4AddActivity}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-[11px] font-bold transition shadow-2xs"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Nueva Actividad</span>
-                  </button>
-                )}
-
-                {onStep4QuickStage && (
-                  <div className="flex items-center gap-1 border-l border-slate-200 pl-1.5 ml-0.5">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase hidden sm:inline">Rápido:</span>
-                    <button
-                      type="button"
-                      onClick={() => onStep4QuickStage('Planear')}
-                      className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-800 hover:bg-orange-200 transition"
-                      title="Agregar actividad para Planear"
-                    >
-                      +P
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onStep4QuickStage('Hacer')}
-                      className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition"
-                      title="Agregar actividad para Hacer"
-                    >
-                      +H
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onStep4QuickStage('Verificar')}
-                      className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 hover:bg-amber-200 transition"
-                      title="Agregar actividad para Verificar"
-                    >
-                      +V
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onStep4QuickStage('Actuar')}
-                      className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 hover:bg-purple-200 transition"
-                      title="Agregar actividad para Actuar"
-                    >
-                      +A
-                    </button>
-                  </div>
-                )}
+                <span className="text-[10px] text-slate-400 font-bold uppercase hidden sm:inline">Aporte rápido PHVA:</span>
+                <button
+                  type="button"
+                  onClick={() => onStep4QuickStage('Planear')}
+                  className="px-2 py-0.5 rounded text-[11px] font-bold bg-orange-100 text-orange-800 hover:bg-orange-200 transition"
+                  title="Aportar actividad para Planear"
+                >
+                  +P
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onStep4QuickStage('Hacer')}
+                  className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition"
+                  title="Aportar actividad para Hacer"
+                >
+                  +H
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onStep4QuickStage('Verificar')}
+                  className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 hover:bg-amber-200 transition"
+                  title="Aportar actividad para Verificar"
+                >
+                  +V
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onStep4QuickStage('Actuar')}
+                  className="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-100 text-purple-800 hover:bg-purple-200 transition"
+                  title="Aportar actividad para Actuar"
+                >
+                  +A
+                </button>
               </div>
             )}
 
             {/* Si está en Paso 5: Controles e Indicadores */}
             {currentStep === 5 && (
-              <div className="flex items-center gap-1.5 text-xs">
-                {onStep5GenerateControls && (
-                  <button
-                    type="button"
-                    onClick={onStep5GenerateControls}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded-lg text-[11px] font-bold transition shadow-2xs"
-                    title="Generar controles de calidad automáticamente basados en las actividades del Mapeo PHVA"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Autogenerar desde PHVA</span>
-                  </button>
-                )}
-                {onStep5AddControl && (
-                  <button
-                    type="button"
-                    onClick={onStep5AddControl}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold transition shadow-2xs"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Nuevo Control</span>
-                  </button>
-                )}
-                {onStep5AddIndicator && (
-                  <button
-                    type="button"
-                    onClick={onStep5AddIndicator}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold transition shadow-2xs"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Nuevo Indicador</span>
-                  </button>
-                )}
+              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-semibold text-[11px]">
+                  {activeProcess.measurementPlan?.length || 0} controles de calidad
+                </span>
+                <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold text-[11px] hidden sm:inline">
+                  {activeProcess.indicators?.length || 0} indicadores de gestión
+                </span>
               </div>
             )}
 
@@ -638,9 +605,9 @@ export const NavigationLevels: React.FC<NavigationLevelsProps> = ({
                   <button
                     type="button"
                     onClick={onStep6ExportJSON}
-                    className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-[11px] font-semibold transition"
+                    className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-[11px] font-semibold transition hidden sm:inline-block"
                   >
-                    Descargar JSON
+                    JSON
                   </button>
                 )}
                 {onStep6ExportCSV && (

@@ -181,19 +181,6 @@ ${process.activities.map(a => `${a.number}. [${a.stage}] ${a.name} (Resp: ${a.re
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={handleToggleSignatures}
-            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition ${
-              editSignatures
-                ? 'bg-amber-100 text-amber-900 border-amber-300'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-            }`}
-          >
-            <PenTool className="w-4 h-4 text-emerald-600" />
-            <span>{editSignatures ? 'Ocultar Cuadro de Firmas' : 'Editar Firmas y Aprobaciones'}</span>
-          </button>
-
-          <button
-            type="button"
             onClick={handleCopySummary}
             className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-200 transition"
             title="Copiar resumen ejecutivo del proceso al portapapeles"

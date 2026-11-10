@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { OrgContext, ProcessCharacterization, JobPosition } from '../types/process';
+import { OrgContext, ProcessCharacterization, JobPosition, WorkGroup } from '../types/process';
 
 export interface ProgressPDFResult {
   success: boolean;
@@ -140,7 +140,8 @@ export async function generateProgressPDF(
   orgContext: OrgContext,
   process: ProcessCharacterization,
   processes: ProcessCharacterization[] = [],
-  jobPositions: JobPosition[] = []
+  jobPositions: JobPosition[] = [],
+  workGroups: WorkGroup[] = []
 ): Promise<ProgressPDFResult> {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -779,6 +780,7 @@ export async function generateProgressPDF(
     process: process,
     processes: processes.length > 0 ? processes : [process],
     jobPositions: jobPositions,
+    workGroups: workGroups,
     activeProcessId: process.id
   };
 
@@ -851,6 +853,7 @@ export async function extractProcessDataFromPDF(file: File): Promise<{
   processes?: ProcessCharacterization[];
   organization?: OrgContext;
   jobPositions?: JobPosition[];
+  workGroups?: WorkGroup[];
   activeProcessId?: string;
 } | null> {
   return new Promise((resolve, reject) => {

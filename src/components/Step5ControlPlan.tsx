@@ -212,22 +212,6 @@ export const Step5ControlPlan: React.FC<Step5ControlPlanProps> = ({
     }
   };
 
-  // Quick suggestion of typical controls
-  const addSuggestedControl = () => {
-    const sampleAct = process.activities?.[0]?.name || 'Operación principal del proceso';
-    const newControl: MeasurementControl = {
-      id: `ctrl-${Date.now()}`,
-      activityName: sampleAct,
-      variableToControl: 'Cumplimiento de especificaciones y tiempos de entrega',
-      specification: 'Entregables conformes con el 100% de los requisitos del cliente',
-      acceptanceCriteria: 'Aprobación del formato de verificación sin no conformidades mayores',
-      inspectorRole: process.leaderRole || 'Líder del Proceso',
-      inspectionRecord: process.requiredFormats?.[0] || 'FOR-01 Registro de Control de Calidad',
-      contingencyAction: 'Detener actividad, emitir reporte de no conformidad e iniciar plan de contingencia'
-    };
-    onChange({ measurementPlan: [...controls, newControl] });
-  };
-
   return (
     <div className="space-y-6">
       
@@ -247,15 +231,11 @@ export const Step5ControlPlan: React.FC<Step5ControlPlanProps> = ({
           </div>
 
           <div className="flex gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={addSuggestedControl}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600/40 hover:bg-amber-600/60 text-amber-100 rounded-xl text-xs font-bold border border-amber-400/30 transition"
-              title="Añadir punto de control típico"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Sugerir Control Típico</span>
-            </button>
+            <div className="px-3.5 py-2 bg-white/10 rounded-xl text-xs font-semibold border border-white/15 flex items-center gap-2">
+              <span className="text-amber-300 font-bold">{controls.length}</span> controles
+              <span className="text-white/40">•</span>
+              <span className="text-emerald-300 font-bold">{indicators.length}</span> KPIs
+            </div>
           </div>
         </div>
       </div>

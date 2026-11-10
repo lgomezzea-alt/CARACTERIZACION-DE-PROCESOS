@@ -17,9 +17,13 @@ import {
   getStoredLastSavedTimestamp,
   saveAllProgressSnapshot,
   downloadLocalBackupFile,
-  shareOrDownloadBackupFile
+  shareOrDownloadBackupFile,
+  getStoredWorkGroups,
+  saveStoredWorkGroups,
+  getStoredActiveSession,
+  saveStoredActiveSession
 } from './utils/storage';
-import { OrgContext, ProcessCharacterization, ProcessCategory, DemingStage, MeasurementControl, ManagementIndicator, ProcessActivity, JobPosition } from './types/process';
+import { OrgContext, ProcessCharacterization, ProcessCategory, DemingStage, MeasurementControl, ManagementIndicator, ProcessActivity, JobPosition, WorkGroup, WorkGroupSession, GroupMember } from './types/process';
 import { NavigationLevels } from './components/NavigationLevels';
 import { Step1General } from './components/Step1General';
 import { Step2Resources } from './components/Step2Resources';
@@ -34,9 +38,10 @@ import { JobManualModal } from './components/JobManualModal';
 import { ExitConfirmModal } from './components/ExitConfirmModal';
 import { SaveLocalModal } from './components/SaveLocalModal';
 import { InstallShortcutModal } from './components/InstallShortcutModal';
+import { TeamAuthModal } from './components/TeamAuthModal';
 import { PROCESS_TEMPLATES } from './data/templates';
 import { generateProgressPDF, extractProcessDataFromPDF } from './utils/pdfProgressReport';
-import { Sparkles, CheckCircle2, AlertTriangle, LogOut, HardDrive, RefreshCw, ShieldCheck, Download, Save, FileDown } from 'lucide-react';
+import { Sparkles, CheckCircle2, AlertTriangle, LogOut, HardDrive, RefreshCw, ShieldCheck, Download, Save, FileDown, Users, KeyRound } from 'lucide-react';
 
 export default function App() {
   const [orgContext, setOrgContext] = useState<OrgContext>(() => getStoredOrgContext());
@@ -64,6 +69,11 @@ export default function App() {
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isSaveLocalModalOpen, setIsSaveLocalModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [isTeamAuthModalOpen, setIsTeamAuthModalOpen] = useState(false);
+
+  // Equipos de Trabajo y Validación de Clave
+  const [workGroups, setWorkGroups] = useState<WorkGroup[]>(() => getStoredWorkGroups());
+  const [activeSession, setActiveSession] = useState<WorkGroupSession | null>(() => getStoredActiveSession());
 
   // Guardado de avances & control de salida
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
@@ -118,6 +128,60 @@ export default function App() {
   useEffect(() => {
     saveStoredActiveProcessId(activeProcessId);
   }, [activeProcessId]);
+
+  useEffect(() => {
+    saveStoredWorkGroups(workGroups);
+  }, [workGroups]);
+
+  useEffect(() => {
+    saveStoredActiveSession(activeSession);
+  }, [activeSession]);
+
+  // Handlers para equipos de trabajo y autenticación de grupo
+  const handleLoginTeamSuccess = (session: WorkGroupSession) => {
+    setActiveSession(session);
+    setSaveSuccessNotification(`¡Equipo "${session.groupName}" validado! Conectado como ${session.authenticatedMemberName}.`);
+    setTimeout(() => setSaveSuccessNotification(null), 4500);
+  };
+
+  const handleLogoutTeamSession = () => {
+    setActiveSession(null);
+    setSaveSuccessNotification('Sesión del equipo cerrada. Puedes ingresar con otro equipo o clave en cualquier momento.');
+    setTimeout(() => setSaveSuccessNotification(null), 4000);
+  };
+
+  const handleCreateGroup = (newGroupData: Omit<WorkGroup, 'id' | 'createdAt' | 'lastAccessAt'>): WorkGroup => {
+    const newGroup: WorkGroup = {
+      ...newGroupData,
+      id: `grp-${Date.now()}`,
+      createdAt: new Date().toISOString().split('T')[0],
+      lastAccessAt: new Date().toISOString()
+    };
+    setWorkGroups(prev => [...prev, newGroup]);
+    return newGroup;
+  };
+
+  const handleDeleteGroup = (groupId: string) => {
+    setWorkGroups(prev => prev.filter(g => g.id !== groupId));
+    if (activeSession?.groupId === groupId) {
+      setActiveSession(null);
+    }
+  };
+
+  const handleAddMemberToGroup = (groupId: string, memberData: Omit<GroupMember, 'id'>) => {
+    setWorkGroups(prev => prev.map(g => {
+      if (g.id === groupId) {
+        return {
+          ...g,
+          members: [
+            ...g.members,
+            { ...memberData, id: `mem-${Date.now()}` }
+          ]
+        };
+      }
+      return g;
+    }));
+  };
 
   // Handler para guardar explícitamente los avances a solicitud del usuario directamente en PC y Celular
   const handleSaveProgress = async () => {
@@ -379,6 +443,12 @@ export default function App() {
             setActiveProcessId(parsed.activeProcessId);
           } else {
             setActiveProcessId(parsed.processes[0].id);
+          }
+          if (parsed.workGroups && Array.isArray(parsed.workGroups) && parsed.workGroups.length > 0) {
+            setWorkGroups(parsed.workGroups);
+          }
+          if (parsed.activeSession) {
+            setActiveSession(parsed.activeSession);
           }
           setHasUnsavedChanges(false);
           setSaveSuccessNotification(`¡Respaldo restaurado con éxito (${parsed.processes.length} procesos cargados)!`);
@@ -842,6 +912,8 @@ export default function App() {
         onSaveProgress={handleSaveProgress}
         onGenerateProgressPDF={handleGenerateProgressPDF}
         isGeneratingPDF={isGeneratingPDF}
+        activeSession={activeSession}
+        onOpenTeamAuthModal={() => setIsTeamAuthModalOpen(true)}
         onRequestExit={handleRequestExit}
         onOpenSaveLocalModal={() => setIsSaveLocalModalOpen(true)}
         onDownloadLocalBackup={handleDownloadLocalBackup}
@@ -1035,6 +1107,19 @@ export default function App() {
         onClose={() => setIsInstallModalOpen(false)}
       />
 
+      {/* Modal de Ingreso, Validación y Creación de Claves para Equipos de Trabajo */}
+      <TeamAuthModal
+        isOpen={isTeamAuthModalOpen}
+        onClose={() => setIsTeamAuthModalOpen(false)}
+        workGroups={workGroups}
+        activeSession={activeSession}
+        onLoginSuccess={handleLoginTeamSuccess}
+        onLogoutSession={handleLogoutTeamSession}
+        onCreateGroup={handleCreateGroup}
+        onDeleteGroup={handleDeleteGroup}
+        onAddMemberToGroup={handleAddMemberToGroup}
+      />
+
       {/* Notificación flotante de confirmación de guardado */}
       {saveSuccessNotification && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-orange-600 text-white px-4 py-3 rounded-xl shadow-lg border border-orange-500 animate-in fade-in slide-in-from-bottom-3 duration-200">
@@ -1116,6 +1201,18 @@ export default function App() {
             {orgContext.name} • NIT: {orgContext.nit} • Sistema de Caracterización de Procesos ISO 9001:2015
           </span>
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setIsTeamAuthModalOpen(true)}
+              className="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-900 font-semibold transition"
+              title="Validar equipo o generar clave de acceso"
+            >
+              <Users className="w-3.5 h-3.5 text-orange-500" />
+              <span>
+                {activeSession ? `Equipo: ${activeSession.groupName}` : 'Ingreso de Equipos (Clave)'}
+              </span>
+            </button>
+            <span className="text-slate-300 hidden sm:inline">•</span>
             <button
               type="button"
               onClick={() => setIsInstallModalOpen(true)}

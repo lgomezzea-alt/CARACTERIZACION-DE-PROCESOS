@@ -144,3 +144,30 @@ export interface StepDefinition {
   shortDesc: string;
   iconName: string;
 }
+
+export interface GroupMember {
+  id: string;
+  name: string;
+  role: string;
+  email?: string;
+}
+
+export interface WorkGroup {
+  id: string;
+  name: string;
+  accessKey: string; // Clave o código de acceso del equipo
+  leaderName: string;
+  department?: string;
+  description?: string;
+  createdAt: string;
+  lastAccessAt: string;
+  members: GroupMember[];
+}
+
+export interface WorkGroupSession {
+  groupId: string;
+  groupName: string;
+  authenticatedMemberName: string;
+  authenticatedMemberRole: string;
+  authenticatedAt: string;
+}

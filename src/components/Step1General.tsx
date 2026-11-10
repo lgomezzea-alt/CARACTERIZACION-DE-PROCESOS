@@ -177,30 +177,10 @@ export const Step1General: React.FC<Step1GeneralProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {onOpenOrgModal && (
-              <button
-                type="button"
-                onClick={onOpenOrgModal}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg shadow-2xs transition"
-              >
-                <Building2 className="w-3 h-3 text-emerald-600" />
-                <span>Ver Misión/Visión</span>
-              </button>
-            )}
-            {onOpenJobManual && (
-              <button
-                type="button"
-                onClick={onOpenJobManual}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg shadow-2xs transition"
-              >
-                <Briefcase className="w-3 h-3 text-orange-600" />
-                <span>Manual Cargos ({jobPositions.length})</span>
-              </button>
-            )}
             <button
               type="button"
               onClick={() => setShowContextFeeder(!showContextFeeder)}
-              className="text-[11px] text-emerald-700 hover:underline font-semibold ml-1"
+              className="text-[11px] text-emerald-700 hover:underline font-semibold"
             >
               {showContextFeeder ? 'Contraer' : 'Expandir'}
             </button>
@@ -227,15 +207,9 @@ export const Step1General: React.FC<Step1GeneralProps> = ({
                 <span className="text-[10px] text-slate-500">
                   Sector: {orgContext?.sector || 'Industrial y Servicios'}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => suggestObjective('estrategico_mision')}
-                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[10px] shadow-2xs transition flex items-center gap-1"
-                  title="Alinear automáticamente el objetivo del proceso a la misión y visión institucional"
-                >
-                  <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>Alinear Objetivo a Misión/Visión</span>
-                </button>
+                <span className="text-[10px] text-emerald-700 font-medium">
+                  {orgContext?.policies?.length || 0} políticas registradas
+                </span>
               </div>
             </div>
 
