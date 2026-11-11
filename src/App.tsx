@@ -36,7 +36,6 @@ import { ProcessMapModal } from './components/ProcessMapModal';
 import { AssistantHelpModal } from './components/AssistantHelpModal';
 import { JobManualModal } from './components/JobManualModal';
 import { ExitConfirmModal } from './components/ExitConfirmModal';
-import { SaveLocalModal } from './components/SaveLocalModal';
 import { InstallShortcutModal } from './components/InstallShortcutModal';
 import { TeamAuthModal } from './components/TeamAuthModal';
 import { PROCESS_TEMPLATES } from './data/templates';
@@ -67,7 +66,6 @@ export default function App() {
   const [isJobManualOpen, setIsJobManualOpen] = useState(false);
   const [showSignaturesDrawer, setShowSignaturesDrawer] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
-  const [isSaveLocalModalOpen, setIsSaveLocalModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [isTeamAuthModalOpen, setIsTeamAuthModalOpen] = useState(false);
 
@@ -915,8 +913,6 @@ export default function App() {
         activeSession={activeSession}
         onOpenTeamAuthModal={() => setIsTeamAuthModalOpen(true)}
         onRequestExit={handleRequestExit}
-        onOpenSaveLocalModal={() => setIsSaveLocalModalOpen(true)}
-        onDownloadLocalBackup={handleDownloadLocalBackup}
         onOpenInstallModal={() => setIsInstallModalOpen(true)}
         hasUnsavedChanges={hasUnsavedChanges}
         lastSavedTime={lastSavedTime}
@@ -926,13 +922,7 @@ export default function App() {
         totalSteps={6}
         demingCounts={demingCounts}
         isDemingComplete={isDemingComplete}
-        onStep1SuggestObjective={handleStep1SuggestObjective}
-        onStep2AddNorms={handleStep2AddNorms}
-        onStep4AddActivity={handleStep4AddActivity}
         onStep4QuickStage={handleStep4QuickStage}
-        onStep5AddControl={handleStep5AddControl}
-        onStep5AddIndicator={handleStep5AddIndicator}
-        onStep5GenerateControls={handleStep5GenerateControls}
         onStep6ToggleSignatures={() => setShowSignaturesDrawer(prev => !prev)}
         isSignaturesDrawerOpen={showSignaturesDrawer}
         onStep6ExportJSON={handleStep6ExportJSON}
@@ -1085,21 +1075,7 @@ export default function App() {
         lastSavedTime={lastSavedTime}
       />
 
-      {/* Modal para Guardar Avances Localmente en Computador o Celular */}
-      <SaveLocalModal
-        isOpen={isSaveLocalModalOpen}
-        onClose={() => setIsSaveLocalModalOpen(false)}
-        orgContext={orgContext}
-        processes={processes}
-        jobPositions={jobPositions}
-        activeProcessId={activeProcessId}
-        hasUnsavedChanges={hasUnsavedChanges}
-        lastSavedTime={lastSavedTime}
-        onSaveBrowserStorage={handleSaveProgress}
-        onImportBackupFile={handleImportFile}
-        onGenerateProgressPDF={handleGenerateProgressPDF}
-        isGeneratingPDF={isGeneratingPDF}
-      />
+
 
       {/* Modal de Creación de Acceso Directo e Instalación en PC y Celulares */}
       <InstallShortcutModal

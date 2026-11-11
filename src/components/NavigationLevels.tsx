@@ -463,10 +463,6 @@ export const NavigationLevels: React.FC<NavigationLevelsProps> = ({
           {/* Botonería Contextual del Paso Actual (Nivel 3 - Herramientas Rápidas) */}
           <div className="flex flex-wrap items-center gap-2">
             
-            {/* Si está en Paso 1: Sugerencias de Objetivos */}
-            {currentStep === 1 && onStep1SuggestObjective && (
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-slate-400 text-[11px] font-semibold hidden md:inline">Sugerir objetivo:</span>
             {/* Si está en Paso 1: Información de Contexto */}
             {currentStep === 1 && (
               <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
